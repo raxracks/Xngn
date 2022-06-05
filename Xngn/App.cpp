@@ -3,6 +3,7 @@
 
 #include <ppltasks.h>
 #include "imgui/imgui.h"
+#include "imgui_impl_uwp.h"
 using namespace Windows::Devices::Input;
 
 using namespace Xngn;
@@ -82,11 +83,23 @@ void App::SetWindow(_In_ CoreWindow^ window)
 	window->PointerMoved +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseMoved);
 
+	window->PointerWheelChanged +=
+		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseScroll);
+
 	window->PointerPressed +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMousePressed);
 
 	window->PointerReleased +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnMouseReleased);
+
+	window->KeyDown +=
+		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyDown);
+
+	window->KeyUp +=
+		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyUp);
+
+	window->CharacterReceived += 
+		ref new TypedEventHandler<CoreWindow^, CharacterReceivedEventArgs^>(this, &App::OnChar);
 
 	m_deviceResources->SetWindow(window);
 }
@@ -215,11 +228,59 @@ void App::OnMouseMoved(CoreWindow^ sender, PointerEventArgs^ args)
 void App::OnMousePressed(CoreWindow^ sender, PointerEventArgs^ args)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	io.AddMouseButtonEvent(0, 1);
+	io.AddMouseButtonEvent(0, args->CurrentPoint->Properties->IsLeftButtonPressed);
+	io.AddMouseButtonEvent(1, args->CurrentPoint->Properties->IsRightButtonPressed);
+	io.AddMouseButtonEvent(2, args->CurrentPoint->Properties->IsMiddleButtonPressed);
 }
 
 void App::OnMouseReleased(CoreWindow^ sender, PointerEventArgs^ args)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	io.AddMouseButtonEvent(0, 0);
+	io.AddMouseButtonEvent(0, args->CurrentPoint->Properties->IsLeftButtonPressed);
+	io.AddMouseButtonEvent(1, args->CurrentPoint->Properties->IsRightButtonPressed);
+	io.AddMouseButtonEvent(2, args->CurrentPoint->Properties->IsMiddleButtonPressed);
 };
+
+void App::OnMouseScroll(CoreWindow^ sender, PointerEventArgs^ args) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMouseWheelEvent(0, args->CurrentPoint->Properties->MouseWheelDelta / 120);
+}
+
+void App::OnKeyDown(CoreWindow^ sender, KeyEventArgs^ args) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddKeyEvent(ImGui_ImplUwp_VirtualKeyToImGuiKey((int)args->VirtualKey), true);
+
+	switch (args->VirtualKey) {
+	case VirtualKey::Control:
+		io.AddKeyEvent(ImGuiKey_ModCtrl, true);
+		break;
+	case VirtualKey::Shift:
+		io.AddKeyEvent(ImGuiKey_ModShift, true);
+		break;
+	case VirtualKey::Application:
+		io.AddKeyEvent(ImGuiKey_ModSuper, true);
+		break;
+	}
+}
+
+void App::OnKeyUp(CoreWindow^ sender, KeyEventArgs^ args) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddKeyEvent(ImGui_ImplUwp_VirtualKeyToImGuiKey((int)args->VirtualKey), false);
+
+	switch (args->VirtualKey) {
+	case VirtualKey::Control:
+		io.AddKeyEvent(ImGuiKey_ModCtrl, false);
+		break;
+	case VirtualKey::Shift:
+		io.AddKeyEvent(ImGuiKey_ModShift, false);
+		break;
+	case VirtualKey::Application:
+		io.AddKeyEvent(ImGuiKey_ModSuper, false);
+		break;
+	}
+}
+
+void App::OnChar(CoreWindow^ sender, CharacterReceivedEventArgs^ args) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddInputCharacterUTF16(args->KeyCode);
+}

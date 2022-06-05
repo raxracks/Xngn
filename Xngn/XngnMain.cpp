@@ -9,6 +9,8 @@ using namespace Windows::Foundation;
 using namespace Windows::System::Threading;
 using namespace Concurrency;
 
+bool showDemoWindow = true;
+
 // Loads and initializes application assets when the application is loaded.
 XngnMain::XngnMain(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_deviceResources(deviceResources)
@@ -99,6 +101,8 @@ bool XngnMain::Render()
 	ImGui_ImplDX11_NewFrame();
 	ImGui::NewFrame();
 
+	ImGui::ShowDemoWindow(&showDemoWindow);
+
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 	{
 		static float f = 0.0f;
@@ -116,6 +120,10 @@ bool XngnMain::Render()
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::End();
 	}
+
+	ImGui::Begin("Another Window");   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+	ImGui::Text("Hello from another window!");
+	ImGui::End();
 
 	// Rendering
 	ImGui::Render();
