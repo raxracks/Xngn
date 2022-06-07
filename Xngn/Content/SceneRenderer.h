@@ -3,24 +3,41 @@
 #include "..\Common\DeviceResources.h"
 #include "ShaderStructures.h"
 #include "..\Common\StepTimer.h"
+#include <vector>
 
 namespace Xngn
 {
+	struct Transform {
+		float posX;
+		float posY;
+		float posZ;
+		float rotX;
+		float rotY;
+		float rotZ;
+		float scaleX;
+		float scaleY;
+		float scaleZ;
+	};
+
 	// This sample renderer instantiates a basic rendering pipeline.
-	class Sample3DSceneRenderer
+	class SceneRenderer
 	{
 	public:
-		Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render();
+		void TransformObject(Transform transform);
 		void StartTracking();
 		void TrackingUpdate(float positionX);
 		void StopTracking();
 		bool IsTracking() { return m_tracking; }
-
+		void AddTransform(Transform transform);
+		int TransformCount();
+		std::vector<Transform>& GetTransforms();
+		Transform& GetTransform(int i);
 
 	private:
 		void Rotate(float radians);
@@ -40,6 +57,8 @@ namespace Xngn
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer	m_constantBufferData;
 		uint32	m_indexCount;
+
+		std::vector<Transform> transforms;
 
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
